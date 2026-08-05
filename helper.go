@@ -1,27 +1,34 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/fatih/color"
 )
 
-func getUserInfo() User {
+func getUserInfo() (User, error) {
 	var firstName string
 	var userTickets int
 	var email string
-	//shows the question, take the user input and take that value with the pointer and put it in the variable
+
 	fmt.Println("Please enter your name:")
 	fmt.Scanln(&firstName)
+	if strings.TrimSpace(firstName) == "" {
+		return User{}, errors.New("name cannot be empty")
+	}
 
 	fmt.Println("Please enter your email address:")
 	fmt.Scanln(&email)
+	if !strings.Contains(email, "@") {
+		return User{}, fmt.Errorf("invalid email: %q", email)
+	}
 
 	fmt.Println("Please enter the number of tickets you want to book:")
 	fmt.Scanln(&userTickets)
 
-	return User{FirstName: firstName, UserTickets: userTickets, Email: email}
+	return User{FirstName: firstName, UserTickets: userTickets, Email: email}, nil
 }
 
 func greetUsers() {
@@ -36,17 +43,27 @@ func namesOnly(users []User) []string {
 	return names
 }
 
-func isValidTicket(totalTickets int, userTickets int) bool {
-	return userTickets > 0 && userTickets <= totalTickets
+func isValidTicket(totalTickets int, userTickets int) error {
+	if userTickets <= 0 {
+		return errors.New("tickets must be greater than zero")
+	}
+	if userTickets > totalTickets {
+		return fmt.Errorf("only %d tickets remaining", totalTickets)
+	}
+	return nil
 }
 
 func bookAndSendTickets(totalTickets int, bookingNames []User) (int, []User) {
 
 	for totalTickets > 0 {
-		var userDetails = getUserInfo()
+		userDetails, err := getUserInfo()
+		if err != nil {
+			fmt.Println(color.RedString("Invalid input:"), err)
+			continue
+		}
 
-		if !isValidTicket(totalTickets, userDetails.UserTickets) {
-			fmt.Println(color.RedString("Not enough tickets. Available:"), totalTickets)
+		if err := isValidTicket(totalTickets, userDetails.UserTickets); err != nil {
+			fmt.Println(color.RedString("Booking failed:"), err)
 			continue
 		}
 
@@ -58,7 +75,6 @@ func bookAndSendTickets(totalTickets int, bookingNames []User) (int, []User) {
 		fmt.Printf("\n*******************************\n")
 		fmt.Printf("List of all attendees: %v\n", strings.Join(namesOnly(bookingNames), ", "))
 		fmt.Printf("\n*******************************\n")
-
 	}
 	return totalTickets, bookingNames
 }
