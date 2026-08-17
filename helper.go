@@ -8,27 +8,27 @@ import (
 	"github.com/fatih/color"
 )
 
-func getUserInfo() (User, error) {
+func getUserInfo() (Ticket, error) {
 	var firstName string
-	var userTickets int
+	var quantity int
 	var email string
 
 	fmt.Println("Please enter your name:")
 	fmt.Scanln(&firstName)
 	if strings.TrimSpace(firstName) == "" {
-		return User{}, errors.New("name cannot be empty")
+		return Ticket{}, errors.New("name cannot be empty")
 	}
 
 	fmt.Println("Please enter your email address:")
 	fmt.Scanln(&email)
 	if !strings.Contains(email, "@") {
-		return User{}, fmt.Errorf("invalid email: %q", email)
+		return Ticket{}, fmt.Errorf("invalid email: %q", email)
 	}
 
 	fmt.Println("Please enter the number of tickets you want to book:")
-	fmt.Scanln(&userTickets)
+	fmt.Scanln(&quantity)
 
-	return User{FirstName: firstName, UserTickets: userTickets, Email: email}, nil
+	return Ticket{Quantity: quantity, User: User{FirstName: firstName, Email: email}}, nil
 }
 
 func greetUsers() {
@@ -43,17 +43,17 @@ func namesOnly(users []User) []string {
 	return names
 }
 
-func isValidTicket(totalTickets int, userTickets int) error {
-	if userTickets <= 0 {
+func isValidTicket(totalTickets int, quantity int) error {
+	if quantity <= 0 {
 		return errors.New("tickets must be greater than zero")
 	}
-	if userTickets > totalTickets {
+	if quantity > totalTickets {
 		return fmt.Errorf("only %d tickets remaining", totalTickets)
 	}
 	return nil
 }
 
-func bookAndSendTickets(totalTickets int, bookingNames []User) (int, []User) {
+func bookTickets(totalTickets int, bookingNames []User) (int, []User) {
 
 	for totalTickets > 0 {
 		userDetails, err := getUserInfo()
@@ -62,15 +62,15 @@ func bookAndSendTickets(totalTickets int, bookingNames []User) (int, []User) {
 			continue
 		}
 
-		if err := isValidTicket(totalTickets, userDetails.UserTickets); err != nil {
+		if err := isValidTicket(totalTickets, userDetails.Quantity); err != nil {
 			fmt.Println(color.RedString("Booking failed:"), err)
 			continue
 		}
 
-		totalTickets -= userDetails.UserTickets
-		bookingNames = append(bookingNames, userDetails)
+		totalTickets -= userDetails.Quantity
+		bookingNames = append(bookingNames, userDetails.User)
 
-		fmt.Printf("Thank you %s for booking %v tickets for Devfest!\n", userDetails.FirstName, userDetails.UserTickets)
+		fmt.Printf("Thank you %s for booking %v tickets for Devfest!\n", userDetails.FirstName, userDetails.Quantity)
 
 		fmt.Printf("\n*******************************\n")
 		fmt.Printf("List of all attendees: %v\n", strings.Join(namesOnly(bookingNames), ", "))
