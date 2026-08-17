@@ -4,8 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/badoux/checkmail"
 	"github.com/fatih/color"
+	"github.com/google/uuid"
 )
 
 func getUserInfo() (Ticket, error) {
@@ -14,33 +17,38 @@ func getUserInfo() (Ticket, error) {
 	var email string
 
 	fmt.Println("Please enter your name:")
-	fmt.Scanln(&firstName)
+	_, err := fmt.Scanln(&firstName)
+	if err != nil {
+		return Ticket{}, err
+	}
 	if strings.TrimSpace(firstName) == "" {
 		return Ticket{}, errors.New("name cannot be empty")
 	}
 
 	fmt.Println("Please enter your email address:")
-	fmt.Scanln(&email)
-	if !strings.Contains(email, "@") {
+	_, err = fmt.Scanln(&email)
+	if err != nil {
+		return Ticket{}, err
+	}
+	if err := checkmail.ValidateFormat(email); err != nil {
 		return Ticket{}, fmt.Errorf("invalid email: %q", email)
 	}
 
 	fmt.Println("Please enter the number of tickets you want to book:")
-	fmt.Scanln(&quantity)
+	_, err = fmt.Scanln(&quantity)
+	if err != nil {
+		return Ticket{}, err
+	}
 
-	return Ticket{Quantity: quantity, User: User{FirstName: firstName, Email: email}}, nil
+	return Ticket{
+		Id:       uuid.New(),
+		Quantity: quantity,
+		Date:     time.Now(),
+		User:     User{FirstName: firstName, Email: email}}, nil
 }
 
 func greetUsers() {
 	fmt.Println("Welcome to Devfest booking!")
-}
-
-func namesOnly(users []User) []string {
-	names := make([]string, len(users))
-	for i, u := range users {
-		names[i] = u.FirstName
-	}
-	return names
 }
 
 func isValidTicket(totalTickets int, quantity int) error {
@@ -53,7 +61,7 @@ func isValidTicket(totalTickets int, quantity int) error {
 	return nil
 }
 
-func bookTickets(totalTickets int, bookingNames []User) (int, []User) {
+func bookTickets(totalTickets int, tickets []Ticket) (int, []Ticket) {
 
 	for totalTickets > 0 {
 		userDetails, err := getUserInfo()
@@ -68,13 +76,9 @@ func bookTickets(totalTickets int, bookingNames []User) (int, []User) {
 		}
 
 		totalTickets -= userDetails.Quantity
-		bookingNames = append(bookingNames, userDetails.User)
+		tickets = append(tickets, userDetails)
 
 		fmt.Printf("Thank you %s for booking %v tickets for Devfest!\n", userDetails.FirstName, userDetails.Quantity)
-
-		fmt.Printf("\n*******************************\n")
-		fmt.Printf("List of all attendees: %v\n", strings.Join(namesOnly(bookingNames), ", "))
-		fmt.Printf("\n*******************************\n")
 	}
-	return totalTickets, bookingNames
+	return totalTickets, tickets
 }
