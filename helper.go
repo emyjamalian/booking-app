@@ -61,6 +61,14 @@ func isValidTicket(totalTickets int, quantity int) error {
 	return nil
 }
 
+func hasExistingBooking(tickets []Ticket, email string) (Ticket, bool) {
+	for _, t := range tickets {
+		if t.Email == email {
+			return t, true
+		}
+	}
+	return Ticket{}, false
+}
 func bookTickets(totalTickets int, tickets []Ticket) (int, []Ticket) {
 
 	for totalTickets > 0 {
@@ -72,6 +80,13 @@ func bookTickets(totalTickets int, tickets []Ticket) (int, []Ticket) {
 
 		if err := isValidTicket(totalTickets, userDetails.Quantity); err != nil {
 			fmt.Println(color.RedString("Booking failed:"), err)
+			continue
+		}
+
+		existingTicket, found := hasExistingBooking(tickets, userDetails.Email)
+
+		if found {
+			fmt.Printf("You have already booked your ticket with ID %v at this ticket %s.\n", existingTicket.Id, existingTicket.Date)
 			continue
 		}
 
