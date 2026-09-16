@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"learn-go/application"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,6 +23,13 @@ type Ticket struct {
 }
 
 func main() {
+	app := application.New()
+
+	errApp := app.Start(context.TODO())
+	if errApp != nil {
+		fmt.Printf("could not start application: %v", errApp)
+	}
+
 	tickets := loadTickets()
 	totalTickets := 50
 
