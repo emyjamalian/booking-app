@@ -69,6 +69,7 @@ func hasExistingBooking(tickets []Ticket, email string) (Ticket, bool) {
 	}
 	return Ticket{}, false
 }
+
 func bookTickets(totalTickets int, tickets []Ticket) (int, []Ticket) {
 
 	for totalTickets > 0 {

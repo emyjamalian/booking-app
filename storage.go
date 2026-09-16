@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -21,7 +22,7 @@ func loadTickets() []Ticket {
 func saveTickets(tickets []Ticket) error {
 	data, err := json.Marshal(tickets)
 	if err != nil {
-		return err
+		return fmt.Errorf("error: %q", err)
 	}
 	err = os.WriteFile(fileName, data, 0644)
 	return err
